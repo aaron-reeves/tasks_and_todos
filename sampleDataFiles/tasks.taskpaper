@@ -1,0 +1,8 @@
+- Another new todo item but with low priority, a @contextTag, a project name, and a due date @created(2017-07-31) @threshold(2017-07-31) @due(2017-08-02_00:00:00) @alert(2017-08-02_08:15:00) @done(2017-08-02)
+What is a threshold date?
+
+AnotherProjectName:
+- See *.taskpaper documents @created(2017-07-31) @file(c:\my\file.txt)
+
+ProjectName:
+- A new todo item with high priority, a @contextTag, a project name, and a due date @created(2017-07-31) @due(2017-08-02_00:00:00)

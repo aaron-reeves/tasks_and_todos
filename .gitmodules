@@ -1,0 +1,3 @@
+[submodule "sharedCode/ar_general_purpose"]
+	path = sharedCode/ar_general_purpose
+	url = https://aaron-reeves@github.com/aaron-reeves/ar_general_purpose
