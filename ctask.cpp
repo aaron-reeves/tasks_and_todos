@@ -475,12 +475,12 @@ void CTask::debug() const {
 }
 
 
-CTaskList::CTaskList() : QList<CTask>() {
+CTaskList::CTaskList() : QList<CTask*>() {
   initialize();
 }
 
 
-CTaskList::CTaskList( const QString& filename, const CTask::TaskFormat fmt ) : QList<CTask>() {
+CTaskList::CTaskList( const QString& filename, const CTask::TaskFormat fmt ) : QList<CTask*>() {
   initialize();
 
   _filename = filename;
@@ -516,7 +516,7 @@ void CTaskList::processToDoTxtFile( const QString& filename ) {
       QString line = in.readLine().trimmed();
 
       if( !line.isEmpty() )
-        this->append( CTask( line, CTask::TodoTxt, counter ) );
+        this->append( new CTask( line, CTask::TodoTxt, counter ) );
 
       ++counter;
     }
@@ -533,7 +533,7 @@ void CTaskList::processTaskpaperFile( const QString& filename ) {
     QString project;
     QStringList notes;
     bool inTask = false;
-    CTask task;
+    CTask* task;
 
     while( !in.atEnd() ) {
       QString line = in.readLine().trimmed();
@@ -545,15 +545,15 @@ void CTaskList::processTaskpaperFile( const QString& filename ) {
         if( line.endsWith( ':' ) ) {
           if( inTask ) {
             // Finish the last task...
-            task.setProject( project );
-            task.setNotes( notes );
+            task->setProject( project );
+            task->setNotes( notes );
             this->append( task );
 
             // ... and start the next task.
             ++counter;
-            task = CTask();
+            task = new CTask();
             notes.clear();
-            task.setOrderInFile( counter );
+            task->setOrderInFile( counter );
             inTask = false;
           }
           project = line.left( line.length() - 1 ).trimmed();
@@ -565,21 +565,21 @@ void CTaskList::processTaskpaperFile( const QString& filename ) {
       else {
         if( inTask ) {
           // Finish the last task...
-          task.setProject( project );
-          task.setNotes( notes );
+          task->setProject( project );
+          task->setNotes( notes );
           this->append( task );
 
           // ... and start the next one.
           ++counter;
-          task = CTask();
+          task = new CTask();
           notes.clear();
-          task.setOrderInFile( counter );
-          task.parseTaskpaper( line );
+          task->setOrderInFile( counter );
+          task->parseTaskpaper( line );
           inTask = false;
         }
         else {
           inTask = true;
-          task.parseTaskpaper( line );
+          task->parseTaskpaper( line );
         }
       }
 
@@ -588,8 +588,8 @@ void CTaskList::processTaskpaperFile( const QString& filename ) {
 
     if( inTask ) {
       // Finish the last task.
-      task.setProject( project );
-      task.setNotes( notes );
+      task->setProject( project );
+      task->setNotes( notes );
       this->append( task );
     }
   }
@@ -597,7 +597,7 @@ void CTaskList::processTaskpaperFile( const QString& filename ) {
 }
 
 
-CTaskList::CTaskList( const CTaskList& other ) : QList<CTask>( other ) {
+CTaskList::CTaskList( const CTaskList& other ) : QList<CTask*>( other ) {
   _filename = other._filename;
   _fileTimestamp = other._fileTimestamp;
   _format = other._format;
@@ -617,8 +617,8 @@ void CTaskList::initialize() {
 
 void CTaskList::debug() const {
   qDebug() << "CTaskList:" << this->count() << "items.";
-  foreach( CTask task, *this ) {
-    task.debug();
+  foreach( CTask* task, *this ) {
+    task->debug();
     qDebug();
   }
   qDebug();
@@ -626,14 +626,14 @@ void CTaskList::debug() const {
 
 
 void CTaskList::sortByProject() {
-  std::sort( this->begin(), this->end(), [](const CTask a, const CTask b) -> bool { return a.project() < b.project(); } );
+  std::sort( this->begin(), this->end(), [](const CTask* a, const CTask* b) -> bool { return a->project() < b->project(); } );
 }
 
 QString CTaskList::asString( const CTask::TaskFormat fmt ) const {
   QString result;
 
-  foreach( CTask task, *this ) {
-    result.append( task.asString( fmt ) );
+  foreach( CTask* task, *this ) {
+    result.append( task->asString( fmt ) );
     result.append( "\r\n" );
   }
 
@@ -649,24 +649,24 @@ void CTaskList::cout( const CTask::TaskFormat fmt ) {
 
   switch( fmt ) {
     case CTask::TodoTxt:
-      foreach( CTask task, *this ) {
-        ::cout << task.asString( fmt ) << endl;
+      foreach( CTask* task, *this ) {
+        ::cout << task->asString( fmt ) << endl;
       }
       break;
     case CTask::Taskpaper:
       this->sortByProject();
 
-      project = this->at(0).project();
+      project = this->at(0)->project();
 
       if( !project.isEmpty() )
         ::cout << project << ":" << endl;
 
-      foreach( CTask task, *this ) {
-        if( task.project() != project ) {
-          project = task.project();
+      foreach( CTask* task, *this ) {
+        if( task->project() != project ) {
+          project = task->project();
           ::cout << endl << project << ":" << endl;
         }
-        ::cout << task.asString( fmt ) << endl;
+        ::cout << task->asString( fmt ) << endl;
       }
 
       break;

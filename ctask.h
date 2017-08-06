@@ -68,6 +68,8 @@ class CTask {
     //void setContexts( QStringList val ) { _contexts = val; _isModified = true; }
 
     //void setFiles( QStringList val ) { _files = val; _isModified = true; }
+    void addFile( const QString& str ) { _files.append( str ); _isModified = true; }
+
     void setNotes( QStringList val ) { _isModified = ( val != _notes ); _notes = val; }
 
     void setOrderInFile( const int val ) { _isModified = ( val != _orderInFile ); _orderInFile = val; }
@@ -119,7 +121,7 @@ class CTask {
 };
 
 
-class CTaskList : public QList<CTask> {
+class CTaskList : public QList<CTask*> {
   public:
     CTaskList();
     CTaskList( const QString& filename, const CTask::TaskFormat fmt );
