@@ -26,9 +26,11 @@ INCLUDEPATH += \
 SOURCES += main.cpp \
     ctask.cpp \
     sharedCode/ar_general_purpose/qcout.cpp \
-    sharedCode/ar_general_purpose/strutils.cpp
+    sharedCode/ar_general_purpose/strutils.cpp \
+    sharedCode/ar_general_purpose/cfilelist2.cpp
 
 HEADERS += \
     ctask.h \
     sharedCode/ar_general_purpose/qcout.h \
-    sharedCode/ar_general_purpose/strutils.h
+    sharedCode/ar_general_purpose/strutils.h \
+    sharedCode/ar_general_purpose/cfilelist2.h
