@@ -18,7 +18,7 @@ class CTask {
     };
 
     CTask();
-    CTask(const QString& str, const CTask::TaskFormat fmt , const int orderInFile = -1 );
+    CTask(const QString& str, const CTask::TaskFormat fmt , const QString& sourceFilename, const int orderInFile = -1 );
     CTask( const CTask& other );
     ~CTask();
 
@@ -37,9 +37,11 @@ class CTask {
 
     bool isModified( void ) const { return _isModified; }
     bool isValid( void ) const;
+
+    QString sourceFilename() const { return _sourceFilename; }
     int orderInFile() const { return _orderInFile; }
 
-    void setTask( const QString& val ) { _isModified = ( _task != val ); _task = val; }
+    void setTask( const QString& val ) { _isModified = ( _task != val.trimmed() ); _task = val.trimmed(); }
 
     void setCompleted( bool val ) { _isModified = ( val != _completed ); _completed = val; }
 
@@ -55,7 +57,7 @@ class CTask {
     void setCompletedDate( QDate val ) { _isModified = ( val != _completedDate ); _completedDate = val; }
     void setCompletedDate( const QString& str );
 
-    void setDue( QDateTime val ) { _isModified = ( val != _due ); _due = val; }
+    void setDue( QDateTime val ) { qDebug() << "Due date changed to " << val; _isModified = ( val != _due ); _due = val; }
     void setDue(const QString& str );
 
     void setAlert( QDateTime val ) { _isModified = ( val != _alert ); _alert = val; }
@@ -64,14 +66,20 @@ class CTask {
     QString project() const;
     void setProject( const QString& str );
 
+    void addProject( QString str );
+    void removeProject( QString str );
+
     //void setProjects( QStringList val ) { _projects = val; _isModified = true; }
     //void setContexts( QStringList val ) { _contexts = val; _isModified = true; }
 
     //void setFiles( QStringList val ) { _files = val; _isModified = true; }
     void addFile( const QString& str ) { _files.append( str ); _isModified = true; }
 
+    bool hasNotes() const { return !_notes.isEmpty(); }
     void setNotes( QStringList val ) { _isModified = ( val != _notes ); _notes = val; }
+    void clearNotes() { _isModified = ( !_notes.isEmpty() ); _notes.clear(); }
 
+    void setSourceFilename( const QString& val ) { _isModified = ( val != _sourceFilename ); _sourceFilename = val; }
     void setOrderInFile( const int val ) { _isModified = ( val != _orderInFile ); _orderInFile = val; }
 
     void parseTaskpaper( QString str );
@@ -108,6 +116,7 @@ class CTask {
     QDateTime _alert;
 
 
+    QString _sourceFilename;
     int _orderInFile;
 
     bool _isModified;
@@ -128,6 +137,8 @@ class CTaskList : public QList<CTask*> {
     CTaskList( const CTaskList& other );
     ~CTaskList();
 
+    void extendedAppend( CTask* value );
+
     void debug() const;
 
     QString asString( const CTask::TaskFormat fmt ) const;
@@ -136,10 +147,16 @@ class CTaskList : public QList<CTask*> {
 
     void sortByProject();
 
+    QSet<QString> projects() const { return _projects; }
+    QSet<QString> contexts() const { return _contexts; }
+
   protected:
     void initialize();
     void processToDoTxtFile( const QString& filename );
     void processTaskpaperFile( const QString& filename );
+
+    QSet<QString> _projects;
+    QSet<QString> _contexts;
 
     QString _filename;
     QDateTime _fileTimestamp;

@@ -1,13 +1,14 @@
-QT += core
-QT -= gui
+QT += core gui
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11
 
 TARGET = tasks
-CONFIG += console
-CONFIG -= app_bundle
-
 TEMPLATE = app
+CONFIG += console
+#CONFIG -= app_bundle
+
+
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked deprecated (the exact warnings
@@ -23,14 +24,26 @@ DEFINES += QT_DEPRECATED_WARNINGS
 INCLUDEPATH += \
   sharedCode
 
-SOURCES += main.cpp \
-    ctask.cpp \
+SOURCES += \
+    main.cpp \
     sharedCode/ar_general_purpose/qcout.cpp \
     sharedCode/ar_general_purpose/strutils.cpp \
-    sharedCode/ar_general_purpose/cfilelist2.cpp
-
+    sharedCode/ar_general_purpose/cfilelist2.cpp \
+    nongui/ctask.cpp \
+    cmainwindow.cpp \
+    ctasktreewidgetitem.cpp \
+    cmytreewidget.cpp \
+    ctaskeditform.cpp
+    
 HEADERS += \
-    ctask.h \
     sharedCode/ar_general_purpose/qcout.h \
     sharedCode/ar_general_purpose/strutils.h \
-    sharedCode/ar_general_purpose/cfilelist2.h
+    sharedCode/ar_general_purpose/cfilelist2.h \
+    nongui/ctask.h \
+    cmainwindow.h \
+    ctasktreewidgetitem.h \
+    cmytreewidget.h \
+    ctaskeditform.h
+
+FORMS    += cmainwindow.ui \
+    ctaskeditform.ui

@@ -1,73 +1,83 @@
-#include <QCoreApplication>
+#include "cmainwindow.h"
+#include <QApplication>
 
 #include <QtCore>
 
 #include <ar_general_purpose/qcout.h>
 #include <ar_general_purpose/cfilelist2.h>
 
-#include "ctask.h"
+#include "nongui/ctask.h"
 
 
-void extractTasks( const QString& filename, CTaskList* tasks ) {
-  QFileInfo fi( filename );
-  QDate createdDate = fi.lastModified().date();
-  QRegExp todo( "\\bTODO\\s?:.+$" );
-
+void extractTasks( const QString& filename, CTaskList* tasks, const bool rewriteFile = false ) {
   QFile data( filename );
 
-  if( data.open( QFile::ReadOnly | QFile::Text ) ) {
+  if( !data.open( QFile::ReadOnly | QFile::Text ) ) {
+    // FIXME: This is an error.
+  }
+  else {
+    QFileInfo fi( filename );
+    QDate createdDate = fi.lastModified().date();
+    QRegExp todo( "\\bTODO\\s?:.+$" );
+    QString lines;
+
     QTextStream in( &data );
-    int counter = 0;
+
     while( !in.atEnd() ) {
-      QString line = in.readLine().trimmed();
+      QString line = in.readLine();
+      QString modLine = line.trimmed();
 
-      if(-1 != todo.indexIn( line ) ) {
-        line = line.mid( todo.indexIn( line ) );
-        line.remove( QRegExp( "TODO\\s?:" ) );
-        line = line.simplified().trimmed();
+      if(-1 != todo.indexIn( modLine ) ) {
+        modLine = modLine.mid( todo.indexIn( modLine ) );
+        modLine.remove( QRegExp( "TODO\\s?:" ) );
+        modLine = modLine.simplified().trimmed();
 
-        CTask* task = new CTask( line, CTask::TodoTxt );
+        CTask* task = new CTask( modLine, CTask::TodoTxt, filename );
         task->addFile( filename );
         task->setCreationDate( createdDate );
-        tasks->append( task );
+        tasks->extendedAppend( task );
       }
+      else {
+        lines.append( line );
+      }
+    }
 
-      ++counter;
+    data.close();
+
+    if( rewriteFile ) {
+      QFile outFile( filename );
+      if( !data.open( QFile::WriteOnly | QFile::Text | QFile::Truncate ) ) {
+        // FIXME: This is an error.
+      }
+      else {
+        QTextStream out( &outFile );
+        for( int i = 0; i < lines.count(); ++i ) {
+          out << lines.at(i) << endl;
+        }
+
+        outFile.close();
+      }
     }
   }
-
 }
 
 
 int main(int argc, char *argv[]) {
-//  QCoreApplication a(argc, argv);
-
-//  return a.exec();
-
-//  CTask task( test, CTask::TodoTxt );
-
-//  task.debug();
-
+//  CTaskList tasks;
+//  CFileList files( "C:/Users/areeves/Google Drive/Dropbox/ResearchProjectDocs", "*.md", true );
+//
+//  foreach( QString filename, files ) {
+//    extractTasks( filename, &tasks );
+//  }
+//
+//  tasks.cout( CTask::Taskpaper );
+//
 //  return 0;
 
-//  CTaskList list( "C:/Users/areeves/Documents/Programming/tasks_and_todos/sampleDataFiles/todo.txt", CTask::TodoTxt );
+  QApplication a(argc, argv);
+  CMainWindow w;
 
-//  list.cout( CTask::TodoTxt );
-//  cout << endl << endl;
-//  list.cout( CTask::Taskpaper );
+  w.show();
 
-//  cout << endl << endl;
-//  CTaskList list( "C:/Users/areeves/Documents/Programming/tasks_and_todos/sampleDataFiles/tasks.taskpaper", CTask::Taskpaper );
-//  list.cout( CTask::TodoTxt );
-
-  CTaskList tasks;
-  CFileList files( "C:/Users/areeves/Google Drive/Dropbox/ResearchProjectDocs", "*.md", true );
-
-  foreach( QString filename, files ) {
-    extractTasks( filename, &tasks );
-  }
-
-  tasks.cout( CTask::Taskpaper );
-
-  return 0;
+  return a.exec();
 }

@@ -8,9 +8,10 @@ CTask::CTask() {
 }
 
 
-CTask::CTask( const QString& str, const CTask::TaskFormat fmt, const int orderInFile /* = -1 */ ) {
+CTask::CTask( const QString& str, const CTask::TaskFormat fmt, const QString& sourceFilename, const int orderInFile /* = -1 */ ) {
   initialize();
 
+  setSourceFilename( sourceFilename );
   setOrderInFile( orderInFile );
 
   switch( fmt ) {
@@ -40,6 +41,7 @@ CTask::CTask( const CTask& other ) {
   _notes = other._notes;
   _alert = other._alert;
 
+  _sourceFilename = other._sourceFilename;
   _orderInFile = other._orderInFile;
   _isModified = other._isModified;
 }
@@ -326,6 +328,22 @@ QString CTask::project() const {
     return projects().at(0);
 }
 
+void CTask::addProject( QString str ) {
+  str = str.trimmed();
+  if( !_projects.contains( str ) ) {
+    _projects.append( str );
+    _isModified = true;
+  }
+}
+
+void CTask::removeProject( QString str ) {
+  str = str.trimmed();
+  if(  _projects.contains( str ) ) {
+    _projects.removeOne( str );
+    _isModified = true;
+  }
+}
+
 
 bool CTask::isValid() const {
   qDebug() << "FIXME: Write this function.";
@@ -515,8 +533,10 @@ void CTaskList::processToDoTxtFile( const QString& filename ) {
     while( !in.atEnd() ) {
       QString line = in.readLine().trimmed();
 
-      if( !line.isEmpty() )
-        this->append( new CTask( line, CTask::TodoTxt, counter ) );
+      if( !line.isEmpty() ) {
+        CTask* t = new CTask( line, CTask::TodoTxt, filename, counter );
+        this->extendedAppend( t );
+      }
 
       ++counter;
     }
@@ -547,11 +567,12 @@ void CTaskList::processTaskpaperFile( const QString& filename ) {
             // Finish the last task...
             task->setProject( project );
             task->setNotes( notes );
-            this->append( task );
+            this->extendedAppend( task );
 
             // ... and start the next task.
             ++counter;
             task = new CTask();
+            task->setSourceFilename( filename );
             notes.clear();
             task->setOrderInFile( counter );
             inTask = false;
@@ -567,11 +588,12 @@ void CTaskList::processTaskpaperFile( const QString& filename ) {
           // Finish the last task...
           task->setProject( project );
           task->setNotes( notes );
-          this->append( task );
+          this->extendedAppend( task );
 
           // ... and start the next one.
           ++counter;
           task = new CTask();
+          task->setSourceFilename( filename );
           notes.clear();
           task->setOrderInFile( counter );
           task->parseTaskpaper( line );
@@ -590,7 +612,7 @@ void CTaskList::processTaskpaperFile( const QString& filename ) {
       // Finish the last task.
       task->setProject( project );
       task->setNotes( notes );
-      this->append( task );
+      this->extendedAppend( task );
     }
   }
 
@@ -601,11 +623,17 @@ CTaskList::CTaskList( const CTaskList& other ) : QList<CTask*>( other ) {
   _filename = other._filename;
   _fileTimestamp = other._fileTimestamp;
   _format = other._format;
+  _projects = other._projects;
 }
 
 
 CTaskList::~CTaskList() {
-  // Do nothing
+  qDebug() << "+++ BEGIN CTaskList::~CTaskList()";
+
+  while( !this->isEmpty() )
+    delete this->takeLast();
+
+  qDebug() << "---END CTaskList::~CTaskList()";
 }
 
 
@@ -613,15 +641,38 @@ void CTaskList::initialize() {
   _filename = QString();
   _fileTimestamp = QDateTime();
   _format = CTask::UnspecifiedFormat;
+  _projects.clear();
 }
+
+
+void CTaskList::extendedAppend( CTask* value ) {
+  this->append( value );
+
+  foreach( QString project, value->projects() )
+    _projects.insert( project );
+
+  foreach( QString context, value->contexts() )
+    _contexts.insert( context );
+}
+
 
 void CTaskList::debug() const {
   qDebug() << "CTaskList:" << this->count() << "items.";
+
   foreach( CTask* task, *this ) {
     task->debug();
     qDebug();
   }
+
   qDebug();
+  qDebug() << "Projects:";
+  foreach( QString project, _projects )
+    qDebug() << "  " << project;
+
+  qDebug();
+  qDebug() << "Contexts:";
+  foreach( QString context, _contexts )
+    qDebug() << "  " << context;
 }
 
 
